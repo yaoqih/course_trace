@@ -6,6 +6,8 @@ import logging
 import gc
 import time
 import shutil
+import requests
+
 def get_all_files(directory):
     """
     遍历指定目录，获取所有文件的相对路径。
@@ -50,6 +52,7 @@ class GitFileRetriever:
         except Exception as e:
             self.logger.error(f"初始化 Git 仓库时发生错误: {str(e)}")
             raise
+        self.largest_commit = self.repo.head.commit.hexsha
 
     def _setup_logger(self):
         """设置日志记录器"""
@@ -111,32 +114,45 @@ class GitFileRetriever:
         except Exception as e:
             self.logger.error(f"获取文件内容时发生错误: {str(e)}")
             raise
-
-    def get_file_history(self, file_path, max_count=10):
+    def get_file_diff(self, file_path, commit_hash1, commit_hash2=None):
         """
-        获取文件的提交历史
+        获取指定文件在两个 commit 之间的差异
         
         Args:
             file_path (str): 文件相对路径
-            max_count (int): 最大获取的提交数量
+            commit_hash1 (str): 第一个 commit 的哈希值
+            commit_hash2 (str): 第二个 commit 的哈希值
             
         Returns:
-            list: 包含提交信息的列表
+            str: 文件差异内容
         """
         try:
+            # 确保文件路径是相对于仓库根目录的
+            if commit_hash2 is None:
+                commit_hash2 = self.largest_commit
             relative_path = Path(file_path).relative_to(self.repo_path) if Path(file_path).is_absolute() else Path(file_path)
-            commits = list(self.repo.iter_commits(paths=str(relative_path), max_count=max_count))
+            file_path_str = str(relative_path).replace('\\', '/')  # 统一使用正斜杠
             
-            return [{
-                'hash': commit.hexsha,
-                'author': commit.author.name,
-                'date': commit.authored_datetime,
-                'message': commit.message.strip()
-            } for commit in commits]
+            # 获取两个指定的 commit
+            commit1 = self.repo.commit(commit_hash1)
+            commit2 = self.repo.commit(commit_hash2)
             
-        except Exception as e:
-            self.logger.error(f"获取文件历史时发生错误: {str(e)}")
+            # 获取差异
+            diff = self.repo.git.diff(commit1.hexsha, commit2.hexsha, '--', file_path_str)
+            
+            if not diff:
+                self.logger.info(f"文件 {file_path_str} 在这两个 commit 之间没有变化")
+                return ""
+                
+            return diff
+            
+        except git.exc.BadName as e:
+            self.logger.error(f"无效的 commit hash: {str(e)}")
             raise
+        except Exception as e:
+            self.logger.error(f"获取文件差异时发生错误: {str(e)}")
+            raise
+
     def __enter__(self):
         """支持上下文管理器"""
         return self
@@ -205,3 +221,30 @@ def cleanup_directory(directory):
                 raise
             time.sleep(retry_delay)
             continue
+
+def create_github_issue(repo_owner, repo_name, title, body, token):
+    # GitHub API endpoint
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/issues"
+    
+    # 设置请求头
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    # issue的数据
+    data = {
+        "title": title,
+        "body": body
+    }
+    
+    # 发送POST请求
+    response = requests.post(url, headers=headers, json=data)
+    
+    if response.status_code == 201:
+        print("Issue创建成功！")
+        return response.json()
+    else:
+        print(f"创建失败，状态码: {response.status_code}")
+        print(response.text)
+        return None

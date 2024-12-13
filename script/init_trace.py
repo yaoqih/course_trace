@@ -4,6 +4,7 @@ import json
 import traceback
 from utils import filter_ignored_files,GitFileRetriever,cleanup_directory
 import subprocess
+import datetime
 
 #init variables
 init_file_name='init_file.txt'
@@ -64,5 +65,5 @@ for file_rule in trace_record_temp.keys():
 
 #save and clean up
 retriever.close()
-json.dump({"trace_record":trace_record,"repo_url":repo_url},open(trace_record_file_name,'w',encoding='utf-8'),indent=4)
+json.dump({"trace_record":trace_record,"repo_url":repo_url,'datetime':[datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')]},open(trace_record_file_name,'w',encoding='utf-8'),indent=4)
 cleanup_directory(flod_name)
