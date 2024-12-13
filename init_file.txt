@@ -1,0 +1,2 @@
+https://github.com/huggingface/course
+chapters/en:ffbbcc850e3398a5807240fd574ded9b5505e19b
