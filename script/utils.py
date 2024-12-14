@@ -222,9 +222,9 @@ def cleanup_directory(directory):
             time.sleep(retry_delay)
             continue
 
-def create_github_issue(repo_owner, repo_name, title, body, token):
+def create_github_issue(repo_id, title, body, token):
     # GitHub API endpoint
-    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/issues"
+    url = f"https://api.github.com/repos/{repo_id}/issues"
     
     # 设置请求头
     headers = {
@@ -248,3 +248,10 @@ def create_github_issue(repo_owner, repo_name, title, body, token):
         print(f"创建失败，状态码: {response.status_code}")
         print(response.text)
         return None
+
+def diff_format(diff:dict):
+    markdown_text=''
+    for key in diff:
+        markdown_text=markdown_text+f'### {key} \n'
+        markdown_text=markdown_text+f'```diff \n{diff[key]} \n``` \n'
+    return markdown_text

@@ -1,0 +1,43 @@
+name: Monthly Trace
+
+on:
+  schedule:
+    # 每月1日00:00执行
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+
+
+jobs:
+  run-trace:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.TRACE_TOKEN }}
+        
+    - name: 设置 Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+        
+    - name: 安装依赖
+      run: |
+        pip install GitPython
+        pip install pathspec
+        pip install requests
+        
+    - name: 运行脚本
+      env:
+        GITHUB_TOKEN: ${{ secrets.TRACE_TOKEN }}
+        REPO_NAME: ${{ github.repository }}
+      run: python script/trace.py
+      
+    - name: 提交更改
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add .
+        git commit -m "Monthly trace update $(date +%Y-%m)"
+        git push

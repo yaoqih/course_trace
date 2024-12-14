@@ -27,6 +27,7 @@ with open(init_file_name) as f:
                 trace_record_temp[line.split(':')[0]]={'commit_id':line.split(':')[1],'line_number':line_count}
             else:
                 raise f"Parse file {init_file_name} in line {line_count}, please check the the number of :"
+            
 #clone repo
 try:
     subprocess.run(['git', 'clone', repo_url], check=True)
