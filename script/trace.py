@@ -30,7 +30,7 @@ for file in trace_data['trace_record']:
     trace_data['trace_record'][file]['commit_ids'].append(retriever.largest_commit)
 
 cleanup_directory(flod_name)
-trace_data['datetime']=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+trace_data['datetime'].append(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 json.dump(trace_data,open('trace_record.json','w',encoding='utf-8'),indent=4)
 
 issue_title=f"diff[{trace_data['datetime'][-2]}-{trace_data['datetime'][-1]}]"
