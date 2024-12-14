@@ -33,6 +33,9 @@ cleanup_directory(flod_name)
 trace_data['datetime'].append(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 json.dump(trace_data,open('trace_record.json','w',encoding='utf-8'),indent=4)
 
-issue_title=f"diff[{trace_data['datetime'][-2]}-{trace_data['datetime'][-1]}]"
-issue_body=diff_format(diff_result)
-create_github_issue(repo_id,issue_title,issue_body,token)
+if len(diff_result)>0:
+    issue_title=f"diff[{trace_data['datetime'][-2]}-{trace_data['datetime'][-1]}]"
+    issue_body=diff_format(diff_result)
+    create_github_issue(repo_id,issue_title,issue_body,token)
+else:
+    print(f"No diff between {trace_data['datetime'][-2]} and {trace_data['datetime'][-1]}")
