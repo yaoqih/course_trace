@@ -6,7 +6,7 @@ import datetime
 token = os.environ.get('GITHUB_TOKEN')
 repo_id = os.environ.get('REPO_NAME')
 assert token,"plese add auth token trace_token in the secrte"
-
+assert os.path.exists("trace_record.json"),"Not found trace_record.json.please edit init_file.txt and init_trace."
 trace_data=json.load(open('trace_record.json','r',encoding='utf-8'))
 repo_url=trace_data['repo_url']
 
